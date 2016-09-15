@@ -1,0 +1,5 @@
+---
+- hosts: GT-FHIR
+- vars:
+- tasks:
+

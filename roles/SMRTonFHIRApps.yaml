@@ -1,0 +1,4 @@
+---
+- hosts: SMRTonFHIRApps
+- vars:
+- tasks:
