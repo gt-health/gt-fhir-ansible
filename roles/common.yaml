@@ -1,0 +1,6 @@
+---
+- hosts: GT-FHIR
+  vars:
+  tasks:
+  - name: Install Git 
+    apt: name=git state=latest update_cache=yes

@@ -1,4 +1,31 @@
 ---
 - hosts: SMRTonFHIRApps
 - vars:
+  PIP_INSTALL_LOCATION: "~"
+  APP_INSTALL_LOCATION: "~"
+  REPO_NAME: "git://github.gatech.edu/I3L/FHIRRelay.git"
 - tasks:
+  - block:
+    - name: Install python 2.7
+      apt: name=python2.7 update-cache=yes
+    - name: Download easy python install
+      get_url:
+        url: https://bootstrap.pypa.io/ez_setup.py
+        dest: PIP_INSTALL_LOCATION
+    - name: easy_install pip
+      command: easy_install pip
+        args:
+          chdir: PIP_INSTALL_LOCATION
+      become: true
+      become_user: root
+    - name: install flask
+      pip: name=Flask version=0.11
+
+  - block:
+    - name: Pull down the application repository
+      git:
+        args:
+          repo: REPO_NAME
+          dest: APP_INSTALL_LOCATION
+
+  **Run_the_flask_service**

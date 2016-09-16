@@ -1,5 +1,61 @@
 ---
 - hosts: GT-FHIR
-- vars:
-- tasks:
+  vars:
+    PORT: 8080
+    SOURCE_LOCATION: "/~"
+    TOMCAT_INSTANCE_LOCATION: "/~"
+  tasks:
+  - block:
+    - name: Install Postgresql
+      apt: name=postgresql
+    - name: Install Tomcat 8
+      apt: name=tomcat8 state=latest update_cache=yes
+    - name: Install the Java Development Kit
+      apt: name=default-jdk state=latest
+    - name: Install Maven
+      apt: name=maven state=latest
+    - name: Install Ant
+      apt: name=ant state=latest
 
+  - block:
+    - name: pull the GT-FHIR Project
+      git: repo=git://github.com/i3l/GT-FHIR.git
+      dest: SOURCE_LOCATION
+
+    - name: config GT-FHIR to point to our local postgresql instance
+      template:
+      **DO_SOME_TEMPLATE_FILLING_HERE**
+    - name: config GT-FHIR to point to OAuth server
+      template:
+      **DO_SOME_TEMPLATE_FILLING_HERE_TOO**
+
+  - block:
+    - name: Configure the Tomcat with Java
+    **DON'T_REALLY_NEED_TO_DO_ANYTHING_HERE**
+
+  - block:
+    - name: build gt-fhir-entities
+      command: mvn clean install 
+      args:
+        chdir: SOURCE_LOCATION+"/gt-fhir-entities/"
+    - name: build gt-fhir-jpabase
+      command: mvn clean install 
+      args:
+        chdir: SOURCE_LOCATION+"/gt-fhir-jpabase/"
+    - name: build gt-fhir-overlay
+      command: mvn clean install 
+      args:
+        chdir: SOURCE_LOCATION+"/gt-fhir-overlay/"
+    - name: build gt-fhir-webapp
+      command: mvn clean install 
+      args:
+        chdir: SOURCE_LOCATION+"/gt-fhir-webapp/"
+
+  - block:
+    - name: Create a Tomcat Instance
+      command: tomcat8-instance-create GT-FHIR-instance
+      args:
+        chdir: TOMCAT_INSTANCE_LOCATION
+
+  - block:
+    
