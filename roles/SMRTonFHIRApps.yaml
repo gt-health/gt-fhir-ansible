@@ -1,31 +1,34 @@
 ---
 - hosts: SMRTonFHIRApps
 - vars:
+  SMRTonFHIRAppList: [ 'ucb_app' ]
   PIP_INSTALL_LOCATION: "~"
   APP_INSTALL_LOCATION: "~"
   REPO_NAME: "git://github.gatech.edu/I3L/FHIRRelay.git"
 - tasks:
-  - block:
-    - name: Install python 2.7
-      apt: name=python2.7 update-cache=yes
-    - name: Download easy python install
-      get_url:
-        url: https://bootstrap.pypa.io/ez_setup.py
-        dest: PIP_INSTALL_LOCATION
-    - name: easy_install pip
-      command: easy_install pip
-        args:
-          chdir: PIP_INSTALL_LOCATION
-      become: true
-      become_user: root
+  - block: Install flask and dependencies
+    - name: install virtualEnv
+      pip: name=virtualEnv
     - name: install flask
       pip: name=Flask version=0.11
+      become: true
+      become_user: root
+    - name: install fhirclient
+      pip: name=fhirclient
 
-  - block:
+  - block: Pull down the flask apps and run them
     - name: Pull down the application repository
       git:
         args:
           repo: REPO_NAME
           dest: APP_INSTALL_LOCATION
-
-  **Run_the_flask_service**
+    - name: make virtual environment
+      command: virtualenv venv
+        args:
+          chdir: APP_INSTALL_LOCATION
+    - name: enter virtual environment
+      command: . venv/bin/activate
+        args:
+          chdir: APP_INSTALL_LOCATION
+    - name: Run SMRTonFHIRApp
+      command: python {{ SMRTonFHIRAppList }}

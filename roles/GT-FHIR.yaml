@@ -57,5 +57,8 @@
       args:
         chdir: TOMCAT_INSTANCE_LOCATION
 
-  - block:
-    
+   - name: Deploy the webapp war into Tomcat
+
+   - name: Start Tomcat
+
+     

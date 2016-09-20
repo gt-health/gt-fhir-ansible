@@ -1,6 +1,18 @@
 ---
-- hosts: GT-FHIR
+- hosts: GT-FHIR,SMRTonFHIRAuth,SMRTonFHIRApps
   vars:
   tasks:
   - name: Install Git 
     apt: name=git state=latest update_cache=yes
+  - name : Install python 2.7
+    apt: name=python2.7
+  - name: Download easy python install
+      get_url:
+        url: https://booystrap.pypa.io/ez_setup.py
+        dest: PIP_INSTALL_LOCATION
+  - name: easy_install pip
+    command: easy_install pip
+      args:
+        chdir: PIP_INSTALL_LOCATION
+    become: true
+    become_user: root
