@@ -9,6 +9,7 @@
   - block: Create tomcat user
       - group: name=tomcat
       - user: name=tomcat group=tomcat
+  
   - block: Install other dependencies
     - name: Install Postgresql
       apt: name=postgresql
@@ -18,6 +19,7 @@
       apt: name=maven state=latest
     - name: Install Ant
       apt: name=ant state=latest
+  
   - block: Install Tomcat
     become: true
     become_user: tomcat
@@ -32,26 +34,33 @@
         src: "{{SOURCE_LOCATION}}/apache-tomcat-8*tar.gz"
         dest: {{TOMCAT_INSTANCE_LOCATION}}
         extra_opts: [ "--strip-components=1" ]
-    - name: make the tomcat user control the conf directory
-      file: path=TOMCAT_INSTANCE_LOCATION
+    #NOTE check to make sure the recursive=yes on mode=directory is ok
+    - name: make the tomcat user control the conf work temp and log directory
+      file: path="{{TOMCAT_INSTANCE_LOCATION}}{{item}}" state=directory mode=0755 group=tomcat recursive=yes
+      with_items:
+        - conf
+        - work
+        - temp
+        - log
+    - name: Create tomcat upstart script
+      template: src=/templates/tomcatconf.j2 dest=/etc/init/tomcat.conf
+    - name: Initialize catalina
+      command: initctl reload-configuration
+    - name: Start tomcat
+      command: initctl start tomcat
 
   - block:
     - name: pull the GT-FHIR Project
       git: repo=git://github.com/i3l/GT-FHIR.git
       dest: SOURCE_LOCATION
-
     - name: config GT-FHIR to point to our local postgresql instance
       template:
-      **DO_SOME_TEMPLATE_FILLING_HERE**
+      #DO_SOME_TEMPLATE_FILLING_HERE
     - name: config GT-FHIR to point to OAuth server
       template:
-      **DO_SOME_TEMPLATE_FILLING_HERE_TOO**
+      #DO_SOME_TEMPLATE_FILLING_HERE_TOO
 
-  - block:
-    - name: Configure the Tomcat with Java
-    **DON'T_REALLY_NEED_TO_DO_ANYTHING_HERE**
-
-  - block:
+  - block:Build the GT-FHIR project
     - name: build gt-fhir-entities
       command: mvn clean install 
       args:
