@@ -3,19 +3,37 @@
   vars:
     PORT: 8080
     SOURCE_LOCATION: "/~"
-    TOMCAT_INSTANCE_LOCATION: "/~"
+    TOMCAT_INSTANCE_LOCATION: "/opt/tomcat"
+    TOMCAT_REMOTE_BINARY: "http://mirror.sdunix.com/apache/tomcat/tomcat-8/v8.0.23/bin/apache-tomcat-8.0.23.tar.gz"
   tasks:
-  - block:
+  - block: Create tomcat user
+      - group: name=tomcat
+      - user: name=tomcat group=tomcat
+  - block: Install other dependencies
     - name: Install Postgresql
       apt: name=postgresql
-    - name: Install Tomcat 8
-      apt: name=tomcat8 state=latest update_cache=yes
     - name: Install the Java Development Kit
       apt: name=default-jdk state=latest
     - name: Install Maven
       apt: name=maven state=latest
     - name: Install Ant
       apt: name=ant state=latest
+  - block: Install Tomcat
+    become: true
+    become_user: tomcat
+    - name: wGet tomcat binary
+      get_url: TOMCAT_REMOTE_BINARY
+      dest: SOURCE_LOCATION
+      mode: 0775
+    - name: mkdir TOMCAT_INSTANCE_LOCATION
+      file: path=TOMCAT_INSTANCE_LOCATION state=directory
+    - name: untar Tomcat binary
+      unarchive:
+        src: "{{SOURCE_LOCATION}}/apache-tomcat-8*tar.gz"
+        dest: {{TOMCAT_INSTANCE_LOCATION}}
+        extra_opts: [ "--strip-components=1" ]
+    - name: make the tomcat user control the conf directory
+      file: path=TOMCAT_INSTANCE_LOCATION
 
   - block:
     - name: pull the GT-FHIR Project
@@ -37,25 +55,25 @@
     - name: build gt-fhir-entities
       command: mvn clean install 
       args:
-        chdir: SOURCE_LOCATION+"/gt-fhir-entities/"
+        chdir: "{{SOURCE_LOCATION}}/gt-fhir-entities/"
     - name: build gt-fhir-jpabase
       command: mvn clean install 
       args:
-        chdir: SOURCE_LOCATION+"/gt-fhir-jpabase/"
+        chdir: "{{SOURCE_LOCATION}}/gt-fhir-jpabase/"
     - name: build gt-fhir-overlay
       command: mvn clean install 
       args:
-        chdir: SOURCE_LOCATION+"/gt-fhir-overlay/"
+        chdir: "{{SOURCE_LOCATION}}/gt-fhir-overlay/"
     - name: build gt-fhir-webapp
       command: mvn clean install 
       args:
-        chdir: SOURCE_LOCATION+"/gt-fhir-webapp/"
+        chdir: "{{SOURCE_LOCATION}}/gt-fhir-webapp/"
 
   - block:
     - name: Create a Tomcat Instance
       command: tomcat8-instance-create GT-FHIR-instance
       args:
-        chdir: TOMCAT_INSTANCE_LOCATION
+        chdir: {{TOMCAT_INSTANCE_LOCATION}}
 
    - name: Deploy the webapp war into Tomcat
 

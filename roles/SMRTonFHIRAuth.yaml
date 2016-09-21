@@ -25,7 +25,7 @@
     - name: checkout the subfolder we need
       command: git checkout HEAD provisioning/
         args:
-          chdir: SOURCE_LOCATION+"/installer"
+          chdir: "{{SOURCE_LOCATION}}/installer"
 
   - block: Setup from ansible script
     - name: SMRTonFHIRAuth Ansible Playbook

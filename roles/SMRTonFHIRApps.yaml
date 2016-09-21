@@ -4,7 +4,7 @@
   SMRTonFHIRAppList: [ 'ucb_app' ]
   PIP_INSTALL_LOCATION: "~"
   APP_INSTALL_LOCATION: "~"
-  REPO_NAME: "git://github.gatech.edu/I3L/FHIRRelay.git"
+  REPO_SRC_LOCATION: "git://github.gatech.edu/I3L/FHIRRelay.git"
 - tasks:
   - block: Install flask and dependencies
     - name: install virtualEnv
@@ -20,8 +20,9 @@
     - name: Pull down the application repository
       git:
         args:
-          repo: REPO_NAME
-          dest: APP_INSTALL_LOCATION
+          repo: {{REPO_SRC_LOCATION}}
+          dest: {{APP_INSTALL_LOCATION}}
+    ***NOTE_IF_YOU_WANT_SOME_NETWORK_SETUP_IN_THE_APPS_DO_IT_HERE***
     - name: make virtual environment
       command: virtualenv venv
         args:
@@ -31,4 +32,5 @@
         args:
           chdir: APP_INSTALL_LOCATION
     - name: Run SMRTonFHIRApp
-      command: python {{ SMRTonFHIRAppList }}
+      command: python {{ items }}
+      with_items: {{SMRTonFHIRAppList}}
