@@ -16,8 +16,8 @@
       apt: ansible
 
   - block: Setup network
-    ***SETUP_ETC_HOSTS_WITH_LOCALTEST_DOMAIN***
-    ***NOTE_WE_DONT_NEED_MORE_PORT_FORWARDING_SINCE_WERE_NOT_USING_VAGRANT_HERE***
+    #SETUP_ETC_HOSTS_WITH_LOCALTEST_DOMAIN
+    #NOTE_WE_DONT_NEED_MORE_PORT_FORWARDING_SINCE_WERE_NOT_USING_VAGRANT_HERE
   - block: Get SMRTonFHIR Installer Repo
     - name: pull the OAuth Ansible Script
       git: repo=git://github.com/smart-on-fhir/installer
@@ -29,4 +29,4 @@
 
   - block: Setup from ansible script
     - name: SMRTonFHIRAuth Ansible Playbook
-      command: ansible-playbook -i "localhost" -c local smart-on-fhir-servers.yml
+      command: ansible-playbook -i "localhost" -c localhost smart-on-fhir-servers.yml
