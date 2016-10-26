@@ -23,8 +23,8 @@
     - block: #Install Tomcat
       - name: wGet tomcat binary
         get_url: TOMCAT_REMOTE_BINARY
-        dest: SOURCE_LOCATION
-        mode: 0775
+          dest: SOURCE_LOCATION
+          mode: 0775
       - name: mkdir TOMCAT_INSTANCE_LOCATION
         file: path=TOMCAT_INSTANCE_LOCATION state=directory
       - name: untar Tomcat binary
