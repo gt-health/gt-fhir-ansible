@@ -1,5 +1,6 @@
 ---
 - hosts: SMRTonFHIRApps
+  remote_user: root
 - vars:
   SMRTonFHIRAppList: [ 'ucb_app' ]
   PIP_INSTALL_LOCATION: "~"

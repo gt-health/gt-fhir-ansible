@@ -1,11 +1,16 @@
 ---
 - hosts: GT-FHIR
+  remote_user: root
   vars:
+    SOURCE_LOCATION: "/tmp/src/"
+    PIP_INSTALL_LOCATION: "pip/"
     PORT: 8080
-    SOURCE_LOCATION: "/~"
-    TOMCAT_INSTANCE_LOCATION: "/opt/tomcat"
-    TOMCAT_REMOTE_BINARY: "http://mirror.sdunix.com/apache/tomcat/tomcat-8/v8.0.23/bin/apache-tomcat-8.0.23.tar.gz"
+    TOMCAT_INSTANCE_LOCATION: "/opt/tomcat/"
+    TOMCAT_REMOTE_BINARY: "http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.6/bin/apache-tomcat-8.5.6.tar.gz"
+    REPO_URL: "git://github.com/i3l/GT-FHIR.git"
   tasks:
+    - include: common.yaml
+
     - block: #Create the tomcat user
       - group: name=tomcat
       - user: name=tomcat group=tomcat
@@ -19,12 +24,16 @@
         apt: name=maven state=latest
       - name: Install Ant
         apt: name=ant state=latest
-    
+      - name: whoami?
+        local_action: command whoami
+ 
     - block: #Install Tomcat
       - name: wGet tomcat binary
-        get_url: TOMCAT_REMOTE_BINARY
-          dest: SOURCE_LOCATION
+        get_url:
+          url:  "{{TOMCAT_REMOTE_BINARY}}"
+          dest: "{{SOURCE_LOCATION}}"
           mode: 0775
+
       - name: mkdir TOMCAT_INSTANCE_LOCATION
         file: path=TOMCAT_INSTANCE_LOCATION state=directory
       - name: untar Tomcat binary
@@ -51,8 +60,9 @@
       
     - block: #Get GT-FHIR Source. Configure GT-FHIR 
       - name: pull the GT-FHIR Project
-        git: repo=git://github.com/i3l/GT-FHIR.git
-        dest: SOURCE_LOCATION
+        git: 
+          repo: "{{REPO_URL}}"
+          dest: "{{SOURCE_LOCATION}}"
       - name: config GT-FHIR to point to our local postgresql instance
         template:
         #DO_SOME_TEMPLATE_FILLING_HERE

@@ -1,5 +1,7 @@
 This is the readme to the gt-fhir-ansible project
 
+This project is an ansible project built with ansible version 2.1.1.0
+
 The purpose of this project is to provide a way to quickly and easily build the gt-fhir-infrastructure for developing.
 
 The gt-fhir infrastructure consist of 3 roles
@@ -12,6 +14,28 @@ The datastore handles the EHR/model part of the process. The Authentication serv
 Each of these components require special network information about the other 2. We are using ansible to quickly create this networked infrastructure.
 
 The following is the steps needed to config yourself perfectly
+
+0) Before step 1, we need to install and configure ansible
+
+sudo apt-get install ansible --version=2.1.1
+
+in /etc/ansible/ansible.cfg
+Uncomment and change the pipelining entry to:
+
+pipelining=True
+
+in /etc/ansible/hosts
+Add these entries at the bottom of the file:
+[GT-FHIR]
+localhost
+
+[SMRTonFHIRAuth]
+localhost
+
+[SMRTonFHIRApps]
+localhost
+
+Note that you should replace "localhost" with the IP address of the Virtual Machine you have configured for each GT-FHIR component.
 
 1) Find the VM machine
 
@@ -28,4 +52,4 @@ By default, Ansible will configure the machines locally, on the provided VM. The
 
 3) Run ansible playbook
 
-
+ansible-playbook GT-FHIR.yaml --check --ask-pass

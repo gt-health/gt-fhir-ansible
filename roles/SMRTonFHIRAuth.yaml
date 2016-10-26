@@ -1,5 +1,6 @@
 ---
 - hosts: SMRTonFHIRAuth
+  remote_user: root
 - vars:
   SOURCE_LOCATION: "~"
 - tasks:
