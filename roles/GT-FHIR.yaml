@@ -6,84 +6,84 @@
     TOMCAT_INSTANCE_LOCATION: "/opt/tomcat"
     TOMCAT_REMOTE_BINARY: "http://mirror.sdunix.com/apache/tomcat/tomcat-8/v8.0.23/bin/apache-tomcat-8.0.23.tar.gz"
   tasks:
-  - block: Create tomcat user
+    - block: #Create the tomcat user
       - group: name=tomcat
       - user: name=tomcat group=tomcat
   
-  - block: Install other dependencies
-    - name: Install Postgresql
-      apt: name=postgresql
-    - name: Install the Java Development Kit
-      apt: name=default-jdk state=latest
-    - name: Install Maven
-      apt: name=maven state=latest
-    - name: Install Ant
-      apt: name=ant state=latest
-  
-  - block: Install Tomcat
-    become: true
-    become_user: tomcat
-    - name: wGet tomcat binary
-      get_url: TOMCAT_REMOTE_BINARY
-      dest: SOURCE_LOCATION
-      mode: 0775
-    - name: mkdir TOMCAT_INSTANCE_LOCATION
-      file: path=TOMCAT_INSTANCE_LOCATION state=directory
-    - name: untar Tomcat binary
-      unarchive:
-        src: "{{SOURCE_LOCATION}}/apache-tomcat-8*tar.gz"
-        dest: {{TOMCAT_INSTANCE_LOCATION}}
-        extra_opts: [ "--strip-components=1" ]
-    #NOTE check to make sure the recursive=yes on mode=directory is ok
-    - name: make the tomcat user control the conf work temp and log directory
-      file: path="{{TOMCAT_INSTANCE_LOCATION}}{{item}}" state=directory mode=0755 group=tomcat recursive=yes
-      with_items:
-        - conf
-        - work
-        - temp
-        - log
-    - name: Create tomcat upstart script
-      template: src=/templates/tomcatconf.j2 dest=/etc/init/tomcat.conf
-    - name: Initialize catalina
-      command: initctl reload-configuration
-    - name: Start tomcat
-      command: initctl start tomcat
+    - block: #Install Postgresql/Java/Maven/Ant
+      - name: Install Postgresql
+        apt: name=postgresql
+      - name: Install the Java Development Kit
+        apt: name=default-jdk state=latest
+      - name: Install Maven
+        apt: name=maven state=latest
+      - name: Install Ant
+        apt: name=ant state=latest
+    
+    - block: #Install Tomcat
+      - name: wGet tomcat binary
+        get_url: TOMCAT_REMOTE_BINARY
+        dest: SOURCE_LOCATION
+        mode: 0775
+      - name: mkdir TOMCAT_INSTANCE_LOCATION
+        file: path=TOMCAT_INSTANCE_LOCATION state=directory
+      - name: untar Tomcat binary
+        unarchive:
+          src: "{{SOURCE_LOCATION}}/apache-tomcat-8*tar.gz"
+          dest: {{TOMCAT_INSTANCE_LOCATION}}
+          extra_opts: [ "--strip-components=1" ]
+      #NOTE check to make sure the recursive=yes on mode=directory is ok
+      - name: make the tomcat user control the conf work temp and log directory
+        file: path="{{TOMCAT_INSTANCE_LOCATION}}{{item}}" state=directory mode=0755 group=tomcat recursive=yes
+        with_items:
+          - conf
+          - work
+          - temp
+          - log
+      - name: Create tomcat upstart script
+        template: src=/templates/tomcatconf.j2 dest=/etc/init/tomcat.conf
+      - name: Initialize catalina
+        command: initctl reload-configuration
+      - name: Start tomcat
+        command: initctl start tomcat
+      become: true
+      become_user: tomcat
+      
+    - block: #Get GT-FHIR Source. Configure GT-FHIR 
+      - name: pull the GT-FHIR Project
+        git: repo=git://github.com/i3l/GT-FHIR.git
+        dest: SOURCE_LOCATION
+      - name: config GT-FHIR to point to our local postgresql instance
+        template:
+        #DO_SOME_TEMPLATE_FILLING_HERE
+      - name: config GT-FHIR to point to OAuth server
+        template:
+        #DO_SOME_TEMPLATE_FILLING_HERE_TOO
 
-  - block:
-    - name: pull the GT-FHIR Project
-      git: repo=git://github.com/i3l/GT-FHIR.git
-      dest: SOURCE_LOCATION
-    - name: config GT-FHIR to point to our local postgresql instance
-      template:
-      #DO_SOME_TEMPLATE_FILLING_HERE
-    - name: config GT-FHIR to point to OAuth server
-      template:
-      #DO_SOME_TEMPLATE_FILLING_HERE_TOO
+    - block: #Compile GT-FHIR
+      - name: build gt-fhir-entities
+        command: mvn clean install 
+        args:
+          chdir: "{{SOURCE_LOCATION}}/gt-fhir-entities/"
+      - name: build gt-fhir-jpabase
+        command: mvn clean install 
+        args:
+          chdir: "{{SOURCE_LOCATION}}/gt-fhir-jpabase/"
+      - name: build gt-fhir-overlay
+        command: mvn clean install 
+        args:
+          chdir: "{{SOURCE_LOCATION}}/gt-fhir-overlay/"
+      - name: build gt-fhir-webapp
+        command: mvn clean install 
+        args:
+          chdir: "{{SOURCE_LOCATION}}/gt-fhir-webapp/"
 
-  - block:Build the GT-FHIR project
-    - name: build gt-fhir-entities
-      command: mvn clean install 
-      args:
-        chdir: "{{SOURCE_LOCATION}}/gt-fhir-entities/"
-    - name: build gt-fhir-jpabase
-      command: mvn clean install 
-      args:
-        chdir: "{{SOURCE_LOCATION}}/gt-fhir-jpabase/"
-    - name: build gt-fhir-overlay
-      command: mvn clean install 
-      args:
-        chdir: "{{SOURCE_LOCATION}}/gt-fhir-overlay/"
-    - name: build gt-fhir-webapp
-      command: mvn clean install 
-      args:
-        chdir: "{{SOURCE_LOCATION}}/gt-fhir-webapp/"
-
-  - block: Deploy GT-FHIR
-    - name: Create a Tomcat Instance
-      command: tomcat8-instance-create GT-FHIR-instance
-      args:
-        chdir: {{TOMCAT_INSTANCE_LOCATION}}
-    - name: Deploy the webapp war into Tomcat
-      copy: src="{{SOURCE_LOCATION}}/gt-fhir-webapp/target/gt-fhir-webapp.war" dest="{{TOMCAT_INSTANCE_LOCATION}}/webapps"
-    - name: restart tomcat
-      command: initctl restart GT-FHIR-instance
+    - block: #Create a Tomcat Instance and restart it
+      - name: Create a Tomcat Instance
+        command: tomcat8-instance-create GT-FHIR-instance
+        args:
+          chdir: {{TOMCAT_INSTANCE_LOCATION}}
+      - name: Deploy the webapp war into Tomcat
+        copy: src="{{SOURCE_LOCATION}}/gt-fhir-webapp/target/gt-fhir-webapp.war" dest="{{TOMCAT_INSTANCE_LOCATION}}/webapps"
+      - name: restart tomcat
+        command: initctl restart GT-FHIR-instance

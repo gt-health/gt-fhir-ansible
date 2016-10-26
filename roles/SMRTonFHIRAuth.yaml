@@ -1,9 +1,9 @@
 ---
 - hosts: SMRTonFHIRAuth
 - vars:
-  SOURCE_LOCATION = "~"
+  SOURCE_LOCATION: "~"
 - tasks:
-  - block: Setup ansible
+  - block: #Setup ansible
     - name: Install software-properties-common
       apt: software-properties-common
     - name: Add ansible Repository 
@@ -15,18 +15,18 @@
     - name: install Ansible
       apt: ansible
 
-  - block: Setup network
+  - block: #Setup network
     #SETUP_ETC_HOSTS_WITH_LOCALTEST_DOMAIN
     #NOTE_WE_DONT_NEED_MORE_PORT_FORWARDING_SINCE_WERE_NOT_USING_VAGRANT_HERE
-  - block: Get SMRTonFHIR Installer Repo
+  - block: #Get SMRTonFHIR Installer Repo
     - name: pull the OAuth Ansible Script
       git: repo=git://github.com/smart-on-fhir/installer
       dest: SOURCE_LOCATION
     - name: checkout the subfolder we need
       command: git checkout HEAD provisioning/
-        args:
-          chdir: "{{SOURCE_LOCATION}}/installer"
+      args:
+        chdir: "{{SOURCE_LOCATION}}/installer"
 
-  - block: Setup from ansible script
+  - block: #Setup from ansible script
     - name: SMRTonFHIRAuth Ansible Playbook
       command: ansible-playbook -i "localhost" -c localhost smart-on-fhir-servers.yml
