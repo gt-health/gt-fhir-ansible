@@ -30,7 +30,7 @@
       - name: untar Tomcat binary
         unarchive:
           src: "{{SOURCE_LOCATION}}/apache-tomcat-8*tar.gz"
-          dest: {{TOMCAT_INSTANCE_LOCATION}}
+          dest: "{{TOMCAT_INSTANCE_LOCATION}}"
           extra_opts: [ "--strip-components=1" ]
       #NOTE check to make sure the recursive=yes on mode=directory is ok
       - name: make the tomcat user control the conf work temp and log directory
@@ -82,7 +82,7 @@
       - name: Create a Tomcat Instance
         command: tomcat8-instance-create GT-FHIR-instance
         args:
-          chdir: {{TOMCAT_INSTANCE_LOCATION}}
+          chdir: "{{TOMCAT_INSTANCE_LOCATION}}"
       - name: Deploy the webapp war into Tomcat
         copy: src="{{SOURCE_LOCATION}}/gt-fhir-webapp/target/gt-fhir-webapp.war" dest="{{TOMCAT_INSTANCE_LOCATION}}/webapps"
       - name: restart tomcat

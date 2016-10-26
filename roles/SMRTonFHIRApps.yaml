@@ -20,8 +20,8 @@
     - name: Pull down the application repository
       git:
         args:
-          repo: {{REPO_SRC_LOCATION}}
-          dest: {{APP_INSTALL_LOCATION}}
+          repo: "{{REPO_SRC_LOCATION}}"
+          dest: "{{APP_INSTALL_LOCATION}}"
     #***NOTE_IF_YOU_WANT_SOME_NETWORK_SETUP_IN_THE_APPS_DO_IT_HERE***
     - name: make virtual environment
       command: virtualenv venv
