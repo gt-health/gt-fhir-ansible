@@ -1,12 +1,15 @@
 ---
 - hosts: GT-FHIR
   remote_user: root
+  become: yes
+  become_method: su
   vars:
     SOURCE_LOCATION: "/tmp/src/"
     PIP_INSTALL_LOCATION: "pip/"
     PORT: 8080
-    TOMCAT_INSTANCE_LOCATION: "/opt/tomcat/"
-    TOMCAT_REMOTE_BINARY: "http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.6/bin/apache-tomcat-8.5.6.tar.gz"
+    TOMCAT_NAME: "apache-tomcat-8.5.6"
+    TOMCAT_INSTANCE_LOCATION: "/opt/tomcat"
+    TOMCAT_REMOTE_BINARY: "http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.6/bin/{{TOMCAT_NAME}}.tar.gz"
     REPO_URL: "git://github.com/i3l/GT-FHIR.git"
   tasks:
     - include: common.yaml
@@ -24,8 +27,6 @@
         apt: name=maven state=latest
       - name: Install Ant
         apt: name=ant state=latest
-      - name: whoami?
-        local_action: command whoami
  
     - block: #Install Tomcat
       - name: wGet tomcat binary
@@ -33,30 +34,41 @@
           url:  "{{TOMCAT_REMOTE_BINARY}}"
           dest: "{{SOURCE_LOCATION}}"
           mode: 0775
-
       - name: mkdir TOMCAT_INSTANCE_LOCATION
-        file: path=TOMCAT_INSTANCE_LOCATION state=directory
+        file: path={{TOMCAT_INSTANCE_LOCATION}} state=directory group=tomcat owner=tomcat
+        become: true
+      - name: mkdir shitty archive directory too
+        file: path={{TOMCAT_INSTANCE_LOCATION}}/{{TOMCAT_NAME}} state=directory
       - name: untar Tomcat binary
         unarchive:
-          src: "{{SOURCE_LOCATION}}/apache-tomcat-8*tar.gz"
+          src: "{{SOURCE_LOCATION}}/{{TOMCAT_NAME}}.tar.gz"
           dest: "{{TOMCAT_INSTANCE_LOCATION}}"
-          extra_opts: [ "--strip-components=1" ]
       #NOTE check to make sure the recursive=yes on mode=directory is ok
       - name: make the tomcat user control the conf work temp and log directory
-        file: path="{{TOMCAT_INSTANCE_LOCATION}}{{item}}" state=directory mode=0755 group=tomcat recursive=yes
+        file: path="{{TOMCAT_INSTANCE_LOCATION}}{{item}}" state=directory mode=0755 group=tomcat recurse=yes
         with_items:
           - conf
           - work
           - temp
           - log
-      - name: Create tomcat upstart script
-        template: src=/templates/tomcatconf.j2 dest=/etc/init/tomcat.conf
-      - name: Initialize catalina
-        command: initctl reload-configuration
-      - name: Start tomcat
-        command: initctl start tomcat
       become: true
       become_user: tomcat
+
+    - block: #Configure tomcat service
+      - name: whoami 
+        local_action: command whoami
+      - name: Create tomcat startup script
+        template: src=../templates/tomcatconf.j2 dest=/etc/init/tomcat.conf
+        become: true
+        become_user: root
+      - name: Initialize catalina
+        command: initctl reload-configuration
+        become: true
+        become_user: root
+      - name: Start tomcat
+        command: initctl start tomcat
+        become: true
+        become_user: root
       
     - block: #Get GT-FHIR Source. Configure GT-FHIR 
       - name: pull the GT-FHIR Project

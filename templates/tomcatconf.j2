@@ -6,7 +6,7 @@ description "Tomcat Server"
   setuid tomcat
   setgid tomcat
   env JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/jre
-  nev CATALINA_HOME=/opt/tomcat
+  nev CATALINA_HOME=/opt/tomcat/apache-tomcat-8.5.6
 
   env JAVA_OPTS="-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
   env CATALINA_OPTS="-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
