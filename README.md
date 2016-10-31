@@ -37,6 +37,13 @@ localhost
 
 Note that you should replace "localhost" with the IP address of the Virtual Machine you have configured for each GT-FHIR component.
 
+Add an ansible user to ssh to.
+
+sudo adduser ansible
+
+in /etc/sudoers add this line:
+ansible ALL=(ALL:ALL) ALL
+
 1) Find the VM machine
 
 This project is really managed within a virtual box machine. Pulling the hosted snapshot machine from virtualbox would be the best way to start setting up your environment. ***VBox Not Hosted yet***
@@ -52,4 +59,13 @@ By default, Ansible will configure the machines locally, on the provided VM. The
 
 3) Run ansible playbook
 
-ansible-playbook GT-FHIR.yaml --check --ask-pass
+ansible-playbook ${THIS_DIRECTORY}/roles/GT-FHIR.yaml -b --ask-pass --ask-become-pass
+
+ansible will prompt you for the ansible user's password that  you  set eariler. The sudo password is the same password.
+
+NOTE: If ansible cannot connect, you have no setup your ansible user correctly
+
+NOTE: Sometimes ansible will not start the tomcat server correctly. In which case, run
+
+sudo /opt/tomcat/apache-tomcat-8.5.6/bin/startup.sh
+
